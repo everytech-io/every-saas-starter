@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
-import { SupabaseClient, User } from '@supabase/supabase-js';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
 
-export function useUserInfo(supabase: SupabaseClient) {
+export function useUserInfo() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUser(data.user);
-      }
-    })();
-  }, [supabase.auth]);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return { user };
 }

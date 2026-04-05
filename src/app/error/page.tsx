@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import { brand } from '@/config/brand';
 
 export const metadata: Metadata = {
-  title: 'AeroEdit - Error',
+  title: `${brand.name} - Error`,
 };
 
 export default function ErrorPage() {

@@ -6,7 +6,8 @@ import {
   SubscriptionCreatedEvent,
   SubscriptionUpdatedEvent,
 } from '@paddle/paddle-node-sdk';
-import { createClient } from '@/utils/supabase/server-internal';
+import { db } from '@/db';
+import { customers, subscriptions } from '@/db/schema';
 
 export class ProcessWebhook {
   async processEvent(eventData: EventEntity) {
@@ -23,32 +24,42 @@ export class ProcessWebhook {
   }
 
   private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent) {
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from('subscriptions')
-      .upsert({
-        subscription_id: eventData.data.id,
-        subscription_status: eventData.data.status,
-        price_id: eventData.data.items[0].price?.id ?? '',
-        product_id: eventData.data.items[0].price?.productId ?? '',
-        scheduled_change: eventData.data.scheduledChange?.effectiveAt,
-        customer_id: eventData.data.customerId,
-      })
-      .select();
+    const values = {
+      subscriptionId: eventData.data.id,
+      subscriptionStatus: eventData.data.status,
+      priceId: eventData.data.items[0].price?.id ?? '',
+      productId: eventData.data.items[0].price?.productId ?? '',
+      scheduledChange: eventData.data.scheduledChange?.effectiveAt ?? null,
+      customerId: eventData.data.customerId,
+    };
 
-    if (error) throw error;
+    await db
+      .insert(subscriptions)
+      .values(values)
+      .onConflictDoUpdate({
+        target: subscriptions.subscriptionId,
+        set: {
+          subscriptionStatus: values.subscriptionStatus,
+          priceId: values.priceId,
+          productId: values.productId,
+          scheduledChange: values.scheduledChange,
+          customerId: values.customerId,
+        },
+      });
   }
 
   private async updateCustomerData(eventData: CustomerCreatedEvent | CustomerUpdatedEvent) {
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from('customers')
-      .upsert({
-        customer_id: eventData.data.id,
-        email: eventData.data.email,
-      })
-      .select();
+    const values = {
+      customerId: eventData.data.id,
+      email: eventData.data.email,
+    };
 
-    if (error) throw error;
+    await db
+      .insert(customers)
+      .values(values)
+      .onConflictDoUpdate({
+        target: customers.customerId,
+        set: { email: values.email },
+      });
   }
 }

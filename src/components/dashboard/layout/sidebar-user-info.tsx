@@ -2,17 +2,18 @@
 
 import { Separator } from '@/components/ui/separator';
 import { LogOut } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
 import { MouseEvent } from 'react';
 import { useUserInfo } from '@/hooks/useUserInfo';
 
 export function SidebarUserInfo() {
-  const supabase = createClient();
-  const { user } = useUserInfo(supabase);
+  const { user } = useUserInfo();
 
   async function handleLogout(e: MouseEvent) {
     e.preventDefault();
-    await supabase.auth.signOut();
+    await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
     location.reload();
   }
 
@@ -22,7 +23,7 @@ export function SidebarUserInfo() {
       <div className={'flex w-full flex-row mt-6 items-center justify-between'}>
         <div className={'flex flex-col items-start justify-center overflow-hidden text-ellipsis'}>
           <div className={'text-sm leading-5 font-semibold w-full overflow-hidden text-ellipsis'}>
-            {user?.user_metadata?.full_name}
+            {user?.displayName}
           </div>
           <div className={'text-sm leading-5 text-muted-foreground w-full overflow-hidden text-ellipsis'}>
             {user?.email}

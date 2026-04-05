@@ -1,6 +1,6 @@
 'use server';
 
-import { validateUserSession } from '@/utils/supabase/server';
+import { validateSession } from '@/utils/auth/session';
 import { Subscription } from '@paddle/paddle-node-sdk';
 import { revalidatePath } from 'next/cache';
 import { getPaddleInstance } from '@/utils/paddle/get-paddle-instance';
@@ -13,7 +13,7 @@ interface Error {
 
 export async function cancelSubscription(subscriptionId: string): Promise<Subscription | Error> {
   try {
-    await validateUserSession();
+    await validateSession();
 
     const subscription = await paddle.subscriptions.cancel(subscriptionId, { effectiveFrom: 'next_billing_period' });
     if (subscription) {

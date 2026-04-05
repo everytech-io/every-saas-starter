@@ -4,14 +4,16 @@ import '../styles/layout.css';
 import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from 'next-themes';
+import { brand } from '@/config/brand';
+import { FirebaseProvider } from '@/components/providers/firebase-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://paddle-billing.vercel.app'),
-  title: 'AeroEdit',
-  description:
-    'AeroEdit is a powerful team design collaboration app and image editor. With plans for businesses of all sizes, streamline your workflow with real-time collaboration, advanced editing tools, and seamless project management.',
+  metadataBase: new URL(brand.siteUrl),
+  title: brand.name,
+  description: brand.metaDescription,
 };
 
 export default function RootLayout({
@@ -20,10 +22,12 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en" className={'min-h-full dark'}>
+    <html lang="en" className={'min-h-full'} suppressHydrationWarning>
       <body className={inter.className}>
-        {children}
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <FirebaseProvider>{children}</FirebaseProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
